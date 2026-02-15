@@ -17,12 +17,23 @@ h1, h2, h3, p, label, div {
     color: white !important;
     font-weight: 500;
 }
+
+/* Make multiselect label black */
+.black-text label {
+    color: black !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------- TITLE ----------------
 st.title("🌍 Personal Climate Impact & Improvement Tracker")
 st.markdown("### Understand how your daily habits influence global warming")
+
+# ---------------- IMAGE ADDED (Birds / Tree) ----------------
+st.image(
+    "https://images.unsplash.com/photo-1501785888041-af3ef285b470",
+    caption="🌳 Nature Needs Protection"
+)
 
 # ---------------- USER INPUT ----------------
 st.header("🧍 Your Daily Lifestyle Habits")
@@ -68,6 +79,8 @@ st.metric("Projected Global CO₂ Emission", f"{global_projection:.2f} Gigatons/
 # ---------------- IMPROVEMENT OPTIONS ----------------
 st.header("🌱 Choose Sustainable Changes")
 
+st.markdown('<div class="black-text">', unsafe_allow_html=True)
+
 changes = st.multiselect(
     "Select habits you are willing to change:",
     [
@@ -78,6 +91,8 @@ changes = st.multiselect(
         "Limit Flights"
     ]
 )
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 reduction = 0
 
@@ -107,7 +122,7 @@ comparison = pd.DataFrame({
     "Yearly CO₂": [yearly_emission, new_yearly]
 })
 
-fig = plt.figure(figsize=(5,3))   # ✅ Smaller graph
+fig = plt.figure(figsize=(5,3))
 plt.bar(comparison["Scenario"], comparison["Yearly CO₂"])
 plt.ylabel("Yearly CO₂ Emission (kg)")
 plt.title("Impact of Lifestyle Changes")
@@ -120,7 +135,7 @@ years = np.arange(1, 31)
 current_projection = yearly_emission * years
 improved_projection = new_yearly * years
 
-fig2 = plt.figure(figsize=(5,3))   # ✅ Smaller graph
+fig2 = plt.figure(figsize=(5,3))
 plt.plot(years, current_projection, label="Current Lifestyle")
 plt.plot(years, improved_projection, label="Improved Lifestyle")
 plt.xlabel("Years")
