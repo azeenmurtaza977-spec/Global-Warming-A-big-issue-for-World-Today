@@ -2,162 +2,148 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from PIL import Image
+import time
 
-# -------------------------
-# Page Config
-# -------------------------
-st.set_page_config(
-    page_title="🌍 Global Warming Impact Simulator",
-    page_icon="🌡️",
-    layout="wide"
-)
+# -------------------- PAGE CONFIG --------------------
+st.set_page_config(page_title="Global Warming Simulator 🌍", layout="wide")
 
-# -------------------------
-# Title Section
-# -------------------------
-st.title("🌍 Global Warming Daily Impact Simulator")
-st.subheader("How small daily climate changes reshape the planet")
-
+# -------------------- DARK GREEN BACKGROUND --------------------
 st.markdown("""
-🔥 Even a **1% daily environmental impact** can compound into massive global change.  
-Use this app to simulate and understand the statistical and real-world effects.
-""")
+<style>
+.stApp {
+    background-color: #0b3d2e;
+    color: white;
+}
+</style>
+""", unsafe_allow_html=True)
 
-# -------------------------
-# Sidebar Controls
-# -------------------------
-st.sidebar.header("⚙️ Simulation Controls")
+# -------------------- TITLE --------------------
+st.title("🌍 Global Warming Impact & Earth Survival Simulator")
+st.markdown("### Small daily temperature increases can drastically change Earth's future 🌡️")
 
-daily_effect = st.sidebar.slider(
-    "🌡️ Daily Environmental Impact (%)",
+# -------------------- USER INPUT --------------------
+st.header("🔧 Adjust Global Warming Growth Rate")
+
+daily_percent = st.slider(
+    "Select Daily Global Warming Increase (%)",
     0.1, 5.0, 1.0, 0.1
 )
 
-years = st.sidebar.slider(
-    "📅 Years to Simulate",
-    1, 100, 30
+years = st.slider(
+    "Select Time Duration (Years)",
+    10, 150, 50
 )
 
-# Convert years to days
+# -------------------- SIMULATION --------------------
 days = years * 365
+growth_rate = daily_percent / 100
 
-# -------------------------
-# Load Image + GIF
-# -------------------------
-st.image(
-    "https://images.unsplash.com/photo-1470114716159-e389f8712fda",
-    caption="🌎 Earth Climate Changes"
-)
-
-st.markdown("### ❄️ Melting Ice Evidence")
-st.image(
-    "https://media.giphy.com/media/3o7TKsQ8UQ3IuZ8Jsk/giphy.gif"
-)
-
-# -------------------------
-# Statistical Simulation
-# -------------------------
-initial_value = 100
-growth_rate = daily_effect / 100
-
+initial_index = 100
 values = []
 
 for day in range(days):
-    new_value = initial_value * ((1 + growth_rate) ** day)
-    values.append(new_value)
+    new_val = initial_index * ((1 + growth_rate) ** day)
+    values.append(new_val)
 
 df = pd.DataFrame({
-    "Days": range(days),
-    "Climate Impact Index": values
+    "Day": range(days),
+    "Climate Index": values
 })
 
-# -------------------------
-# Chart 1 – Compounding Impact
-# -------------------------
-st.header("📊 Compounding Climate Impact Over Time")
+# -------------------- EARTH LIFE MODEL --------------------
+# Assuming Earth critical collapse index
+collapse_threshold = 100000000  
 
-fig1 = plt.figure()
-plt.plot(df["Days"], df["Climate Impact Index"])
-plt.xlabel("Days")
-plt.ylabel("Impact Index")
-plt.title("Compounding Effect of Daily Climate Change")
-st.pyplot(fig1)
+life_left_days = next(
+    (i for i, v in enumerate(values) if v >= collapse_threshold),
+    days
+)
 
-# -------------------------
-# Chart 2 – Temperature Simulation
-# -------------------------
-st.header("🌡️ Simulated Global Temperature Rise")
+life_left_years = life_left_days / 365
 
-base_temp = 14  # Approx global average temp
-temp_rise = np.log(df["Climate Impact Index"]) * 0.5
-temperature = base_temp + temp_rise
+# -------------------- EARTH LIFE DISPLAY --------------------
+st.header("⏳ Estimated Life Sustainability on Earth")
 
-fig2 = plt.figure()
-plt.plot(df["Days"], temperature)
-plt.xlabel("Days")
-plt.ylabel("Average Global Temperature (°C)")
-plt.title("Projected Temperature Increase")
-st.pyplot(fig2)
-
-# -------------------------
-# Statistical Insights
-# -------------------------
-st.header("📈 Statistical Insights")
-
-col1, col2, col3 = st.columns(3)
+col1, col2 = st.columns(2)
 
 col1.metric(
-    "🔥 Total Impact Growth",
-    f"{values[-1]:.2f}"
+    "🌡️ Daily Increase Selected",
+    f"{daily_percent}%"
 )
 
-col2.metric(
-    "🌡️ Final Temperature",
-    f"{temperature.iloc[-1]:.2f} °C"
+if life_left_days == days:
+    col2.success("🌱 Earth survives beyond selected timeframe")
+else:
+    col2.error(f"⚠️ Estimated Sustainable Life Left: {life_left_years:.1f} Years")
+
+# -------------------- GRAPH SELECTION --------------------
+st.header("📊 Select Visualization")
+
+graph_option = st.radio(
+    "Choose Graph Type",
+    ["Climate Growth", "Temperature Rise", "Earth Survival Countdown"]
 )
 
-col3.metric(
-    "📅 Simulation Period",
-    f"{years} Years"
-)
+# -------------------- GRAPH 1 --------------------
+if graph_option == "Climate Growth":
 
-# -------------------------
-# Explanation Section
-# -------------------------
+    fig = plt.figure()
+    plt.plot(df["Day"], df["Climate Index"])
+    plt.xlabel("Days")
+    plt.ylabel("Climate Impact Index")
+    plt.title("Compounding Global Warming Effect")
+
+    st.pyplot(fig)
+
+# -------------------- GRAPH 2 --------------------
+elif graph_option == "Temperature Rise":
+
+    base_temp = 14
+    temperature = base_temp + np.log(df["Climate Index"]) * 0.5
+
+    fig = plt.figure()
+    plt.plot(df["Day"], temperature)
+    plt.xlabel("Days")
+    plt.ylabel("Average Temperature (°C)")
+    plt.title("Projected Global Temperature Rise")
+
+    st.pyplot(fig)
+
+# -------------------- GRAPH 3 --------------------
+elif graph_option == "Earth Survival Countdown":
+
+    progress = st.progress(0)
+    status = st.empty()
+
+    for i in range(100):
+        progress.progress(i + 1)
+        status.write("🌎 Simulating Earth Condition...")
+        time.sleep(0.01)
+
+    remaining_percent = max(0, 100 - (life_left_days / days) * 100)
+
+    st.subheader("🌍 Earth Stability Level")
+    st.metric("Remaining Stability (%)", f"{remaining_percent:.2f}")
+
+# -------------------- IMAGE + GIF --------------------
+st.header("🧊 Real Evidence of Climate Change")
+
+st.image("https://images.unsplash.com/photo-1610878180933-12372899fa4d")
+
+st.image("https://media.giphy.com/media/l0HlPwMAzh13pcZ20/giphy.gif")
+
+# -------------------- EDUCATIONAL SECTION --------------------
+st.header("📚 Statistical Perspective")
+
 st.markdown("""
-## 📚 Why This Matters
+✔ Climate damage follows **exponential growth**  
+✔ Temperature response is **logarithmic scaling**  
+✔ Small environmental changes compound drastically over time  
 
-✔ Climate change effects are **non-linear**  
-✔ Small daily environmental damage compounds exponentially  
-✔ Temperature increase accelerates ice melt, sea level rise, and biodiversity loss  
-
-### 🧮 Statistical Concept Used
-- Exponential Growth Model
-- Logarithmic Temperature Scaling
+This simulation uses statistical modelling to demonstrate potential long-term planetary impact.
 """)
 
-# -------------------------
-# User Awareness Section
-# -------------------------
-st.header("🌱 What Can Individuals Do?")
-
-actions = st.multiselect(
-    "Select sustainable actions:",
-    [
-        "🚲 Use Public Transport",
-        "🌳 Plant Trees",
-        "⚡ Reduce Electricity Usage",
-        "🥗 Reduce Food Waste",
-        "♻️ Recycling"
-    ]
-)
-
-if actions:
-    st.success("Great! Small actions collectively reduce global warming.")
-
-# -------------------------
-# Footer
-# -------------------------
+# -------------------- FOOTER --------------------
 st.markdown("---")
-st.markdown("Made with ❤️ using Streamlit")
+st.markdown("🌱 Every small action today affects tomorrow")
+
