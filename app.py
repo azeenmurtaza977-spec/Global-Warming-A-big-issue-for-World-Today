@@ -14,7 +14,7 @@ st.markdown("""
 }
 
 h1, h2, h3, p, label, div {
-    color: black !important;
+    color: white !important;
     font-weight: 500;
 }
 </style>
@@ -39,9 +39,7 @@ with col2:
     waste = st.slider("🗑️ Waste Produced Per Day (kg)", 0.0, 5.0, 1.0)
 
 # ---------------- SCIENTIFIC APPROX EMISSIONS ----------------
-# Approximate emission factors (accepted climate averages)
-
-car_emission = car_km * 0.192  # kg CO2 per km
+car_emission = car_km * 0.192
 electricity_emission = electricity * 0.475
 flight_emission = flights * 255
 meat_emission = meat_meals * 7 * 0.3
@@ -63,12 +61,9 @@ colC.metric("Equivalent Trees Needed", f"{yearly_emission / 22:.0f} Trees")
 st.header("🌎 If Everyone Lived Like You")
 
 world_population = 8_000_000_000
-global_projection = yearly_emission * world_population / 1e12  # gigatons
+global_projection = yearly_emission * world_population / 1e12
 
-st.metric(
-    "Projected Global CO₂ Emission",
-    f"{global_projection:.2f} Gigatons/year"
-)
+st.metric("Projected Global CO₂ Emission", f"{global_projection:.2f} Gigatons/year")
 
 # ---------------- IMPROVEMENT OPTIONS ----------------
 st.header("🌱 Choose Sustainable Changes")
@@ -112,7 +107,7 @@ comparison = pd.DataFrame({
     "Yearly CO₂": [yearly_emission, new_yearly]
 })
 
-fig = plt.figure()
+fig = plt.figure(figsize=(5,3))   # ✅ Smaller graph
 plt.bar(comparison["Scenario"], comparison["Yearly CO₂"])
 plt.ylabel("Yearly CO₂ Emission (kg)")
 plt.title("Impact of Lifestyle Changes")
@@ -125,7 +120,7 @@ years = np.arange(1, 31)
 current_projection = yearly_emission * years
 improved_projection = new_yearly * years
 
-fig2 = plt.figure()
+fig2 = plt.figure(figsize=(5,3))   # ✅ Smaller graph
 plt.plot(years, current_projection, label="Current Lifestyle")
 plt.plot(years, improved_projection, label="Improved Lifestyle")
 plt.xlabel("Years")
