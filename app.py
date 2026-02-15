@@ -2,148 +2,162 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import time
 
-# -------------------- PAGE CONFIG --------------------
-st.set_page_config(page_title="Global Warming Simulator 🌍", layout="wide")
+# ---------------- PAGE CONFIG ----------------
+st.set_page_config(page_title="Personal Climate Impact 🌍", layout="wide")
 
-# -------------------- DARK GREEN BACKGROUND --------------------
+# ---------------- CUSTOM STYLE ----------------
 st.markdown("""
 <style>
 .stApp {
     background-color: #0b3d2e;
-    color: white;
+}
+
+h1, h2, h3, p, label, div {
+    color: black !important;
+    font-weight: 500;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# -------------------- TITLE --------------------
-st.title("🌍 Global Warming Impact & Earth Survival Simulator")
-st.markdown("### Small daily temperature increases can drastically change Earth's future 🌡️")
+# ---------------- TITLE ----------------
+st.title("🌍 Personal Climate Impact & Improvement Tracker")
+st.markdown("### Understand how your daily habits influence global warming")
 
-# -------------------- USER INPUT --------------------
-st.header("🔧 Adjust Global Warming Growth Rate")
-
-daily_percent = st.slider(
-    "Select Daily Global Warming Increase (%)",
-    0.1, 5.0, 1.0, 0.1
-)
-
-years = st.slider(
-    "Select Time Duration (Years)",
-    10, 150, 50
-)
-
-# -------------------- SIMULATION --------------------
-days = years * 365
-growth_rate = daily_percent / 100
-
-initial_index = 100
-values = []
-
-for day in range(days):
-    new_val = initial_index * ((1 + growth_rate) ** day)
-    values.append(new_val)
-
-df = pd.DataFrame({
-    "Day": range(days),
-    "Climate Index": values
-})
-
-# -------------------- EARTH LIFE MODEL --------------------
-# Assuming Earth critical collapse index
-collapse_threshold = 100000000  
-
-life_left_days = next(
-    (i for i, v in enumerate(values) if v >= collapse_threshold),
-    days
-)
-
-life_left_years = life_left_days / 365
-
-# -------------------- EARTH LIFE DISPLAY --------------------
-st.header("⏳ Estimated Life Sustainability on Earth")
+# ---------------- USER INPUT ----------------
+st.header("🧍 Your Daily Lifestyle Habits")
 
 col1, col2 = st.columns(2)
 
-col1.metric(
-    "🌡️ Daily Increase Selected",
-    f"{daily_percent}%"
+with col1:
+    car_km = st.slider("🚗 Daily Car Travel (km)", 0, 100, 10)
+    electricity = st.slider("⚡ Daily Electricity Usage (kWh)", 0, 50, 8)
+    flights = st.slider("✈️ Flights Per Year", 0, 20, 1)
+
+with col2:
+    meat_meals = st.slider("🍖 Meat Meals Per Week", 0, 21, 7)
+    waste = st.slider("🗑️ Waste Produced Per Day (kg)", 0.0, 5.0, 1.0)
+
+# ---------------- SCIENTIFIC APPROX EMISSIONS ----------------
+# Approximate emission factors (accepted climate averages)
+
+car_emission = car_km * 0.192  # kg CO2 per km
+electricity_emission = electricity * 0.475
+flight_emission = flights * 255
+meat_emission = meat_meals * 7 * 0.3
+waste_emission = waste * 1.9
+
+daily_emission = car_emission + electricity_emission + meat_emission + waste_emission
+yearly_emission = (daily_emission * 365) + flight_emission
+
+# ---------------- DISPLAY FOOTPRINT ----------------
+st.header("🌡️ Your Estimated Carbon Footprint")
+
+colA, colB, colC = st.columns(3)
+
+colA.metric("Daily CO₂ Emission", f"{daily_emission:.2f} kg")
+colB.metric("Yearly CO₂ Emission", f"{yearly_emission:.2f} kg")
+colC.metric("Equivalent Trees Needed", f"{yearly_emission / 22:.0f} Trees")
+
+# ---------------- GLOBAL IMPACT SIMULATION ----------------
+st.header("🌎 If Everyone Lived Like You")
+
+world_population = 8_000_000_000
+global_projection = yearly_emission * world_population / 1e12  # gigatons
+
+st.metric(
+    "Projected Global CO₂ Emission",
+    f"{global_projection:.2f} Gigatons/year"
 )
 
-if life_left_days == days:
-    col2.success("🌱 Earth survives beyond selected timeframe")
-else:
-    col2.error(f"⚠️ Estimated Sustainable Life Left: {life_left_years:.1f} Years")
+# ---------------- IMPROVEMENT OPTIONS ----------------
+st.header("🌱 Choose Sustainable Changes")
 
-# -------------------- GRAPH SELECTION --------------------
-st.header("📊 Select Visualization")
-
-graph_option = st.radio(
-    "Choose Graph Type",
-    ["Climate Growth", "Temperature Rise", "Earth Survival Countdown"]
+changes = st.multiselect(
+    "Select habits you are willing to change:",
+    [
+        "Use Public Transport",
+        "Reduce Meat Consumption",
+        "Use Renewable Energy",
+        "Reduce Waste",
+        "Limit Flights"
+    ]
 )
 
-# -------------------- GRAPH 1 --------------------
-if graph_option == "Climate Growth":
+reduction = 0
 
-    fig = plt.figure()
-    plt.plot(df["Day"], df["Climate Index"])
-    plt.xlabel("Days")
-    plt.ylabel("Climate Impact Index")
-    plt.title("Compounding Global Warming Effect")
+if "Use Public Transport" in changes:
+    reduction += car_emission * 0.5
 
-    st.pyplot(fig)
+if "Reduce Meat Consumption" in changes:
+    reduction += meat_emission * 0.6
 
-# -------------------- GRAPH 2 --------------------
-elif graph_option == "Temperature Rise":
+if "Use Renewable Energy" in changes:
+    reduction += electricity_emission * 0.7
 
-    base_temp = 14
-    temperature = base_temp + np.log(df["Climate Index"]) * 0.5
+if "Reduce Waste" in changes:
+    reduction += waste_emission * 0.5
 
-    fig = plt.figure()
-    plt.plot(df["Day"], temperature)
-    plt.xlabel("Days")
-    plt.ylabel("Average Temperature (°C)")
-    plt.title("Projected Global Temperature Rise")
+if "Limit Flights" in changes:
+    reduction += flight_emission * 0.5 / 365
 
-    st.pyplot(fig)
+new_daily = daily_emission - reduction
+new_yearly = new_daily * 365
 
-# -------------------- GRAPH 3 --------------------
-elif graph_option == "Earth Survival Countdown":
+# ---------------- COMPARISON ----------------
+st.header("📊 Impact of Your Lifestyle Changes")
 
-    progress = st.progress(0)
-    status = st.empty()
+comparison = pd.DataFrame({
+    "Scenario": ["Current Lifestyle", "Improved Lifestyle"],
+    "Yearly CO₂": [yearly_emission, new_yearly]
+})
 
-    for i in range(100):
-        progress.progress(i + 1)
-        status.write("🌎 Simulating Earth Condition...")
-        time.sleep(0.01)
+fig = plt.figure()
+plt.bar(comparison["Scenario"], comparison["Yearly CO₂"])
+plt.ylabel("Yearly CO₂ Emission (kg)")
+plt.title("Impact of Lifestyle Changes")
+st.pyplot(fig)
 
-    remaining_percent = max(0, 100 - (life_left_days / days) * 100)
+# ---------------- LONG TERM EFFECT ----------------
+st.header("⏳ Long-Term Climate Influence")
 
-    st.subheader("🌍 Earth Stability Level")
-    st.metric("Remaining Stability (%)", f"{remaining_percent:.2f}")
+years = np.arange(1, 31)
+current_projection = yearly_emission * years
+improved_projection = new_yearly * years
 
-# -------------------- IMAGE + GIF --------------------
-st.header("🧊 Real Evidence of Climate Change")
+fig2 = plt.figure()
+plt.plot(years, current_projection, label="Current Lifestyle")
+plt.plot(years, improved_projection, label="Improved Lifestyle")
+plt.xlabel("Years")
+plt.ylabel("Total CO₂ Emission")
+plt.legend()
+plt.title("30-Year Climate Impact Projection")
+st.pyplot(fig2)
 
-st.image("https://images.unsplash.com/photo-1610878180933-12372899fa4d")
-
-st.image("https://media.giphy.com/media/l0HlPwMAzh13pcZ20/giphy.gif")
-
-# -------------------- EDUCATIONAL SECTION --------------------
-st.header("📚 Statistical Perspective")
+# ---------------- EDUCATIONAL INSIGHT ----------------
+st.header("📚 Why Individual Actions Matter")
 
 st.markdown("""
-✔ Climate damage follows **exponential growth**  
-✔ Temperature response is **logarithmic scaling**  
-✔ Small environmental changes compound drastically over time  
+• Transportation contributes nearly **25% of global emissions**  
+• Meat production significantly increases methane release  
+• Electricity from fossil fuels accelerates global warming  
+• Waste increases landfill methane emissions  
 
-This simulation uses statistical modelling to demonstrate potential long-term planetary impact.
+Small individual changes collectively produce massive climate improvements.
 """)
 
-# -------------------- FOOTER --------------------
+# ---------------- REAL-TIME TIPS ----------------
+st.header("💡 Personalized Climate Advice")
+
+if yearly_emission > 5000:
+    st.error("Your carbon footprint is above global sustainable average. Consider reducing travel or energy usage.")
+
+elif yearly_emission > 2500:
+    st.warning("You are close to sustainable range. Small improvements can help.")
+
+else:
+    st.success("Excellent! Your lifestyle supports climate sustainability.")
+
 st.markdown("---")
-st.markdown("🌱 Every small action today affects tomorrow")
+st.markdown("🌍 Protecting Earth starts with individual responsibility")
 
